@@ -7,8 +7,6 @@ library(plm)
 library(quantreg)
 library(matrixStats)
 
-
-
 #only fixed effect
 #ids must be "firm","year"
 
@@ -83,7 +81,6 @@ bpqr.fit <- function(formula, ids, B = 1000, effect="within", taus = c(.5,.8,.9,
     hatalpha.i  <- cbind(fixef(within));      	                  # dimension n x 1
     sumprod.hatalpha=sum(hatalpha.i*as.vector(table(rs.bdata$firm)))
     intercept <- sumprod.hatalpha/nrow(rs.bdata)
-    hatalpha    <- array(,dim=c(nrow(rs.bdata),1))
 
     for (i in 1:n) {
       seg.subs = which(rs.bdata$firm==i)
@@ -112,8 +109,7 @@ bpqr.fit <- function(formula, ids, B = 1000, effect="within", taus = c(.5,.8,.9,
   time=end-start
 
   cat(" Version  :",outversion,"\n","Bootstrap: Done","\n")
-
-
+}
 
 
 
