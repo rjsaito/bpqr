@@ -1,16 +1,15 @@
 # Panel Quantile Regression
 
+# this function currently only handles fixed effects panel regression
 # @parameter data - must be pdata
 
 # example
-#wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
-#data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
-#data = pdata.frame(data, index=c("Station","Year"))
-#formula = log10(Original.Peaks) ~ Urban.Frac + Precip
-#tau = c(.25,.5,.75)
-#library(plm); library(quantreg)
-#pqr(formula, data, tau=tau)
-
+# wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
+# data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
+# data = pdata.frame(data, index=c("Station","Year"))
+# formula = log10(Original.Peaks) ~ Urban.Frac + Precip
+# tau = c(.25,.5,.75)
+# pqr(formula, data, tau=tau)
 
 pqr <- function(formula, data, method="within", tau=.5){
   require(plm); require(quantreg)
@@ -18,7 +17,7 @@ pqr <- function(formula, data, method="within", tau=.5){
   pmod  <- plm(formula,data=data,model=method)
   prelim  <- cbind(coef(pmod));    # This vector is K x 1 - only slopes.
   hatalpha.i  <- cbind(fixef(pmod));      	       # dimension n x 1, FE only
-  firm <- gsub( "-.*$", "", row.names(data))
+  firm <- gsub( "-.*$|\\..*$", "", row.names(data))
   firm.fe <- merge(cbind(table(firm)),cbind(hatalpha.i), by="row.names")
   intercept <- sum(row.prod(firm.fe[,-1]))/nrow(data)  #weighted mean of fixed effects
   adj.hatalpha <- rep(hatalpha.i, table(firm)) - intercept
@@ -34,3 +33,5 @@ pqr <- function(formula, data, method="within", tau=.5){
   z$fe <- hatalpha.i
   z
 }
+
+
