@@ -1,7 +1,7 @@
 # Bootstrap Panel Quantile Regression
 
 # example
-library(plm); library(quantreg);
+library(plm); library(quantreg)
 wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
 data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
 data = pdata.frame(data, index=c("Station","Year"))
@@ -14,6 +14,7 @@ bpqr <- function(formula, data, B = 100, firm = 1, method="within", tau = .5){
   #cl <- match.call()
   #mf <- match.call(expand.dots = FALSE)
 
+  ### ERROR: Need to remove fixed effects before bootstrapping
   # Re-shape to wide to resample individual with their times
   key <- names(attr(data,"index"))
   value <- all.vars(formula)
@@ -33,7 +34,7 @@ bpqr <- function(formula, data, B = 100, firm = 1, method="within", tau = .5){
   Sys.time() -> start
 
   for (i in 1:B){
-    # Generate random indices out of the n individuals
+    # Generate random indices out of the n str(x)
     samp <- sample(1:n,n,replace=T); # for balanced and unbalanced data
 
     wide_rdt <- widedt[samp,]    # bootstrap data
