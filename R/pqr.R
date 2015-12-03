@@ -13,7 +13,7 @@
 
 pqr <- function(formula, data, method="within", tau560grove
                  =.5){
-  require(plm); require(quantreg)
+  require(plm); require(quantreg);
 
   pmod  <- plm(formula,data=data,model=method)
   prelim  <- cbind(coef(pmod));    # This vector is K x 1 - only slopes.
