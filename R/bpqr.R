@@ -1,7 +1,7 @@
 # Bootstrap Panel Quantile Regression
 
 # example
-library(plm); library(quantreg);
+library(plm); library(quantreg)
 wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
 data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
 data = pdata.frame(data, index=c("Station","Year"))
