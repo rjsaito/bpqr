@@ -11,7 +11,8 @@
 # tau = c(.25,.5,.75)
 # pqr(formula, data, tau=tau)
 
-pqr <- function(formula, data, method="within", tau=.5){
+pqr <- function(formula, data, method="within", tau560grove
+                 =.5){
   require(plm); require(quantreg)
 
   pmod  <- plm(formula,data=data,model=method)
