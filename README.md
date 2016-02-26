@@ -1,10 +1,6 @@
----
-title: "A Vignette to Bootstrap Panel Quantile Regression"
-author: "Riki Saito"
-date: "December 3, 2015"
-output: html_document
----
 
+## A Vignette to Bootstrap Panel Quantile Regression
+### Riki Saito
 
 First, we will view the summary of the example data used in this vignette.
 
