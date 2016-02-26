@@ -48,7 +48,7 @@ Let us first examine the relationship of the response with the predictor, and th
 plot(data$Urban.Frac, log10(data$Original.Peaks), xlab="Urban.Frac",ylab="log10(Peaks)")
 ```
 
-![plot of chunk unnamed-chunk-2](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-2-1.png) 
+![plot of chunk unnamed-chunk-2](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-2-1.png) 
 
 ```r
 boxplot(log10(Original.Peaks) ~ Station, data)
