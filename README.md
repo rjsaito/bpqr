@@ -54,7 +54,7 @@ plot(data$Urban.Frac, log10(data$Original.Peaks), xlab="Urban.Frac",ylab="log10(
 boxplot(log10(Original.Peaks) ~ Station, data)
 ```
 
-![plot of chunk unnamed-chunk-2](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-2-2.png) 
+![plot of chunk unnamed-chunk-2](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-2-2.png) 
 
 
 We can argue the use of a quantile regression from the first plot, and the use of a panel regression from the second plot. Now let us try applying a panel quantile regression on this data. The first step is to perform a fixed effects panel regression on this data.
@@ -73,7 +73,7 @@ adj.hatalpha <- rep(hatalpha.i, table(all.firm)) - intercept
 hist(hatalpha.i)
 ```
 
-![plot of chunk unnamed-chunk-3](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-3-1.png) 
+![plot of chunk unnamed-chunk-3](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-3-1.png) 
 
 From the panel regression, we can see the varying intercepts of different "firms". We will remove this heterogeneity in the response, and the apply quantile regression.
 
@@ -116,14 +116,14 @@ z
 plot(data$Urban.Frac, y.adj, xlab="Urban.Frac")
 ```
 
-![plot of chunk unnamed-chunk-4](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-4-1.png) 
+![plot of chunk unnamed-chunk-4](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-4-1.png) 
 
 ```r
 plot(data$Urban.Frac, y.adj)
 for(i in seq_len(length(tau))) abline(coef(z)[1,i],coef(z)[2,i])
 ```
 
-![plot of chunk unnamed-chunk-4](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-4-2.png) 
+![plot of chunk unnamed-chunk-4](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-4-2.png) 
 
 
 Now with bootstrapping
@@ -135,4 +135,4 @@ Now with bootstrapping
 ## Time elapsed:  16.564 seconds
 ```
 
-![plot of chunk unnamed-chunk-5](https://github.com/rjsaito/bpqr/tree/master/Vignette_files/figure-html/unnamed-chunk-5-1.png) 
+![plot of chunk unnamed-chunk-5](https://github.com/rjsaito/bpqr/blob/master/Vignette_files/figure-html/unnamed-chunk-5-1.png) 
