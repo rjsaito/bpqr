@@ -1,0 +1,187 @@
+---
+title: "Vignette to Bootstrapped Panel Quantile Regression"
+author: "Riki Saito"
+date: "February 26, 2016"
+output: html_document
+---
+
+First, we will view the summary of the example data used in this vignette.
+
+
+```{r, echo=FALSE}
+#Step 0 load data, packages, other useful functions
+wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
+library(plm); library(quantreg)
+data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
+data = pdata.frame(data, index=c("Station","Year"))
+row.prod <- function (x, na.rm = FALSE) {
+  n <- nrow(x); y <- double(length = n)
+  for (i in seq_len(n)) {
+    y[i] <- prod(x[i,] , na.rm = na.rm)
+  }
+  y
+}
+summary(data)
+```
+
+Let us first examine the relationship of the response with the predictor, and the boxplot of the response by "firm" levels to motivate the use of a panel quantile regression.
+
+```{r, fig.width = 7, fig.height = 7}
+# Motivation for method
+plot(data$Urban.Frac, log10(data$Original.Peaks), xlab="Urban.Frac",ylab="log10(Peaks)")
+boxplot(log10(Original.Peaks) ~ Station, data)
+```
+
+
+We can argue the use of a quantile regression from the first plot, and the use of a panel regression from the second plot. Now let us try applying a panel quantile regression on this data. The first step is to perform a fixed effects panel regression on this data.
+
+```{r, fig.width = 7, fig.height = 7}
+formula = log10(Original.Peaks) ~ Urban.Frac;
+plm  <- plm(formula,data=data,model="within");
+prelim  <- cbind(coef(plm));    # This vector is K x 1 - only slopes.
+
+hatalpha.i  <- cbind(fixef(plm));      	                  # dimension n x 1
+all.firm <- gsub( "-.*$|\\..*$", "", row.names(data))
+all.firm.fe <- merge(cbind(table(all.firm)),cbind(hatalpha.i), by="row.names")
+intercept <- sum(row.prod(all.firm.fe[,-1]))/nrow(data)  #weighted mean of fixed effects
+adj.hatalpha <- rep(hatalpha.i, table(all.firm)) - intercept
+hist(hatalpha.i)
+```
+
+From the panel regression, we can see the varying intercepts of different "firms". We will remove this heterogeneity in the response, and the apply quantile regression.
+
+
+```{r, fig.width = 7, fig.height = 7}
+tau = c(.01,.05,seq(.1,.9,by=.1),.95,.99)
+mf <- model.frame(formula, data)
+y <- model.response(mf, "numeric")
+x <- model.matrix(formula, data)
+y.adj <- y - adj.hatalpha     #new y values adjusted for fixed effects
+fm <- update.formula(formula, as.formula('y.adj ~ .'))
+index = names(attr(data,"index"))
+rqdf <- pdata.frame(cbind(data,y.adj),index=index)   #might need to edit
+z <- rq(fm, data=rqdf, tau)
+#z <- rq(y.adj~., data=data.frame(y.adj,x[,-1]), tau)
+z$fe <- hatalpha.i
+z
+
+plot(data$Urban.Frac, y.adj, xlab="Urban.Frac")
+plot(data$Urban.Frac, y.adj)
+for(i in seq_len(length(tau))) abline(coef(z)[1,i],coef(z)[2,i])
+```
+
+
+Now with bootstrapping
+
+
+```{r, echo=FALSE, fig.width = 7, fig.height = 7}
+pqr <- function(formula, data, method="within", tau=.5){
+  require(plm); require(quantreg);
+
+  pmod  <- plm(formula,data=data,model=method)
+  prelim  <- cbind(coef(pmod));    # This vector is K x 1 - only slopes.
+  hatalpha.i  <- cbind(fixef(pmod));      	       # dimension n x 1, FE only
+  all.firm <- gsub( "-.*$|\\..*$", "", row.names(data))
+  all.firm.fe <- merge(cbind(table(all.firm)),cbind(hatalpha.i), by="row.names")
+  intercept <- sum(row.prod(all.firm.fe[,-1]))/nrow(data)  #weighted mean of fixed effects
+  adj.hatalpha <- rep(hatalpha.i, table(all.firm)) - intercept
+
+  mf <- model.frame(formula, data)
+  y <- model.response(mf, "numeric")
+  x <- model.matrix(formula, data)
+  y.adj <- y - adj.hatalpha     #new y values adjusted for fixed effects
+  fm <- update.formula(formula, as.formula('y.adj ~ .'))
+  index = names(attr(data,"index"))
+  rqdf <- pdata.frame(cbind(data,y.adj),index=index)   #might need to edit
+  z <- rq(fm, data=rqdf, tau)
+  #z <- rq(y.adj~., data=data.frame(y.adj,x[,-1]), tau)
+  z$fe <- hatalpha.i
+  z
+}
+
+bpqr <- function(formula, data, B = 100, firm = 1, method="within", tau = .5){
+  #cl <- match.call()
+  #mf <- match.call(expand.dots = FALSE)
+
+  require(plm); require(quantreg);
+  pmod  <- plm(formula,data=data,model=method)
+  prelim  <- cbind(coef(pmod));    # This vector is K x 1 - only slopes.
+  hatalpha.i  <- cbind(fixef(pmod));      	       # dimension n x 1, FE only
+  all.firm <- gsub( "-.*$|\\..*$", "", row.names(data))
+  all.firm.fe <- merge(cbind(table(all.firm)),cbind(hatalpha.i), by="row.names")
+  intercept <- sum(row.prod(all.firm.fe[,-1]))/nrow(data)  #weighted mean of fixed effects
+  adj.hatalpha <- rep(hatalpha.i, table(all.firm)) - intercept
+
+  mf <- model.frame(formula, data)
+  y <- model.response(mf, "numeric")
+  x <- model.matrix(formula, data)
+  y.adj <- y - adj.hatalpha     #new y values adjusted for fixed effects
+  fm <- update.formula(formula, as.formula('y.adj ~ .'))
+  index = names(attr(data,"index"))
+  rqdf <- pdata.frame(cbind(data,y.adj),index=index)   #might need to edit
+
+  # Re-shape to wide to resample individual with their times
+  key <- names(attr(rqdf,"index"))
+  value <- all.vars(formula)
+  dt <- pdata.frame(cbind(data[,c(key,value)],y.adj), index=key)
+
+  firm.var <- key[firm]
+  time.var <- key[-firm]
+
+  widedt	<- reshape(dt, idvar=firm.var, timevar=time.var, direction="wide")
+
+  n <- length(unique(data[,firm.var]))   # n panel samples
+  K <- ncol(model.matrix(formula,data))  # parameters
+
+  param <- array(0,dim=c(B,K,length(tau))) #initialize output data
+
+  pb <- winProgressBar(title = "progress bar", min = 0, max = B, width = 300)
+  Sys.time() -> start
+
+  for (i in 1:B){
+    # Generate random indices out of the n individuals
+    samp <- sample(1:n,n,replace=T); # for balanced and unbalanced data
+
+    wide_rdt <- widedt[samp,]    # bootstrap data
+    wide_rdt[,firm.var] <- 1:n     # rename id to prevent duplicates
+
+    # Reshape the bootstrap data back to long version to apply estimator
+    rdt <- data.frame(na.omit(reshape(wide_rdt, direction="long")))
+    names(rdt) <- names(dt)
+    rdt <- rdt[order(rdt[firm.var], rdt[time.var]),]
+    row.names(rdt) <- paste(rdt[,firm.var],rdt[,time.var],sep=".")
+    rpdt    <- pdata.frame(rdt, index = key, row.names = T)
+
+    # panel quant reg
+    z <- pqr(formula, data=rpdt, tau=tau)
+
+    # write result
+    theta   <- coef(z)
+
+    if(length(tau) == 1) param[i,,1] <- coef(z) else
+    if(length(tau) > 1)  param[i,,] <- coef(z)
+
+    Sys.sleep(0.1); setWinProgressBar(pb, i, title=paste( round(i/B*100, 0),"% done",sep=""))
+  }
+  close(pb)
+  Sys.time() -> end
+  cat("Bootstrap Complete. \nTime elapsed: ", round(difftime(end, start, units="secs"),3) ,"seconds")
+  colnames(param) <- names(theta)
+  return(param)
+}
+
+z2 = bpqr(formula, data, B = 10, firm = 1, tau = tau)
+coef.z2 = apply(z2, 2:3, mean)
+```
+
+```{r, echo=FALSE, fig.width = 7, fig.height = 7}
+plot(data$Urban.Frac, y.adj, xlab="Urban.Frac")
+for(i in seq_len(length(tau))) abline(coef(z)[1,i],coef(z)[2,i])
+for(i in seq_len(length(tau))) abline(coef.z2[1,i],coef.z2[2,i],col="red")
+```
+
+The red lines are bootstrapped quantile regresion lines.
+
+
+
+
