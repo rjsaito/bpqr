@@ -2,8 +2,8 @@
 
 # example
 library(plm); library(quantreg)
-wd = "C:/Users/Riki/Dropbox/USGS/Work/bpqr/"
-data = read.csv(paste(wd, "bpqr_sample_data.csv",sep=""))
+wd = "..."
+data = read.csv(paste(wd, "....csv",sep=""))
 data = pdata.frame(data, index=c("Station","Year"))
 formula = log10(Original.Peaks) ~ Urban.Frac + Precip
 tau = c(.25,.5,.75)
